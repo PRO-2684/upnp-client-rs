@@ -36,49 +36,17 @@ impl MediaRendererClient {
     pub async fn load(&self, url: &str, options: LoadOptions) -> Result<(), Error> {
         let dlna_features = options.dlna_features.unwrap_or("*".to_string());
         let content_type = options.content_type.unwrap_or("video/mpeg".to_string());
-        let protocol_info = format!("http-get:*:{}:{}", content_type, dlna_features);
-        let title = options
-            .metadata
-            .clone()
-            .unwrap_or(Metadata::default())
-            .title;
-        let artist = options
-            .metadata
-            .clone()
-            .unwrap_or(Metadata::default())
-            .artist;
-        let album = options
-            .metadata
-            .clone()
-            .unwrap_or(Metadata::default())
-            .album;
-        let album_art_uri = options
-            .metadata
-            .clone()
-            .unwrap_or(Metadata::default())
-            .album_art_uri;
-        let genre = options
-            .metadata
-            .clone()
-            .unwrap_or(Metadata::default())
-            .genre;
-
-        let m = Metadata {
-            url: url.to_string(),
-            title,
-            artist,
-            album,
-            album_art_uri,
-            genre,
-            protocol_info,
-        };
+        let protocol_info = format!("http-get:*:{content_type}:{dlna_features}");
+        let mut metadata = options.metadata.unwrap_or_default();
+        metadata.url = url.to_string();
+        metadata.protocol_info = protocol_info;
 
         let mut params = HashMap::new();
         params.insert("InstanceID".to_string(), "0".to_string());
         params.insert("CurrentURI".to_string(), url.to_string());
         params.insert(
             "CurrentURIMetaData".to_string(),
-            build_metadata(m, options.object_class.unwrap_or(ObjectClass::Video)),
+            build_metadata(metadata, options.object_class.unwrap_or(ObjectClass::Video)),
         );
         self.device_client
             .call_action("AVTransport", "SetAVTransportURI", params)
@@ -151,49 +119,17 @@ impl MediaRendererClient {
     pub async fn set_next(&self, url: &str, options: LoadOptions) -> Result<(), Error> {
         let dlna_features = options.dlna_features.unwrap_or("*".to_string());
         let content_type = options.content_type.unwrap_or("video/mpeg".to_string());
-        let protocol_info = format!("http-get:*:{}:{}", content_type, dlna_features);
-        let title = options
-            .metadata
-            .clone()
-            .unwrap_or(Metadata::default())
-            .title;
-        let artist = options
-            .metadata
-            .clone()
-            .unwrap_or(Metadata::default())
-            .artist;
-        let album = options
-            .metadata
-            .clone()
-            .unwrap_or(Metadata::default())
-            .album;
-        let album_art_uri = options
-            .metadata
-            .clone()
-            .unwrap_or(Metadata::default())
-            .album_art_uri;
-        let genre = options
-            .metadata
-            .clone()
-            .unwrap_or(Metadata::default())
-            .genre;
-
-        let m = Metadata {
-            url: url.to_string(),
-            title,
-            artist,
-            protocol_info,
-            album,
-            album_art_uri,
-            genre,
-        };
+        let protocol_info = format!("http-get:*:{content_type}:{dlna_features}");
+        let mut metadata = options.metadata.unwrap_or_default();
+        metadata.url = url.to_string();
+        metadata.protocol_info = protocol_info;
 
         let mut params = HashMap::new();
         params.insert("InstanceID".to_string(), "0".to_string());
         params.insert("NextURI".to_string(), url.to_string());
         params.insert(
             "NextURIMetaData".to_string(),
-            build_metadata(m, options.object_class.unwrap_or(ObjectClass::Video)),
+            build_metadata(metadata, options.object_class.unwrap_or(ObjectClass::Video)),
         );
         self.device_client
             .call_action("AVTransport", "SetNextAVTransportURI", params)

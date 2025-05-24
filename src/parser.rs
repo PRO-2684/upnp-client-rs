@@ -573,98 +573,82 @@ pub fn deserialize_content_directory(xml: &str, ip: &str) -> Result<(Vec<Contain
         match e {
             Ok(XmlEvent::StartElement {
                 name, attributes, ..
-            }) => {
-                if name.local_name == "container" {
+            }) => match name.local_name.as_str() {
+                "container" => {
                     in_container = true;
                     let mut container = Container::default();
-                    for attr in attributes.clone() {
+                    for attr in attributes {
                         if attr.name.local_name == "id" {
-                            container.id = attr.value.clone();
-                        }
-                        if attr.name.local_name == "parentID" {
-                            container.parent_id = attr.value.clone();
+                            container.id = attr.value;
+                        } else if attr.name.local_name == "parentID" {
+                            container.parent_id = attr.value;
                         }
                     }
                     containers.push(container);
                 }
-                if name.local_name == "item" {
+                "item" => {
                     in_item = true;
                     let mut item = Item::default();
-                    for attr in attributes.clone() {
+                    for attr in attributes {
                         if attr.name.local_name == "id" {
-                            item.id = attr.value.clone();
-                        }
-                        if attr.name.local_name == "parentID" {
-                            item.parent_id = attr.value.clone();
+                            item.id = attr.value;
+                        } else if attr.name.local_name == "parentID" {
+                            item.parent_id = attr.value;
                         }
                     }
                     items.push(item);
                 }
-                if name.local_name == "title" {
+                "title" => {
                     in_title = true;
                 }
-                if name.local_name == "artist" {
+                "artist" => {
                     in_artist = true;
                 }
-                if name.local_name == "album" {
+                "album" => {
                     in_album = true;
                 }
-                if name.local_name == "albumArtURI" {
+                "albumArtURI" => {
                     in_album_art = true;
                 }
-                if name.local_name == "genre" {
+                "genre" => {
                     in_genre = true;
                 }
-                if name.local_name == "class" {
+                "class" => {
                     in_class = true;
                 }
-                if name.local_name == "res" {
+                "res" => {
                     for attr in attributes {
-                        if attr.name.local_name == "protocolInfo"
-                            && (attr.value.clone().contains("audio")
-                                || attr.value.clone().contains("video"))
-                        {
-                            items.last_mut().unwrap().protocol_info = attr.value.clone();
-                        }
-                        if attr.name.local_name == "size" {
-                            items.last_mut().unwrap().size = Some(attr.value.parse::<u64>()?);
-                        }
-                        if attr.name.local_name == "duration" {
-                            items.last_mut().unwrap().duration = Some(attr.value.clone());
+                        match attr.name.local_name.as_str() {
+                            "protocolInfo" => {
+                                if attr.value.contains("audio") || attr.value.contains("video") {
+                                    items.last_mut().unwrap().protocol_info = attr.value;
+                                }
+                            }
+                            "size" => {
+                                items.last_mut().unwrap().size = Some(attr.value.parse()?);
+                            }
+                            "duration" => {
+                                items.last_mut().unwrap().duration = Some(attr.value);
+                            }
+                            _ => {}
                         }
                     }
                     in_res = true;
                 }
-            }
-            Ok(XmlEvent::EndElement { name }) => {
-                if name.local_name == "container" {
-                    in_container = false;
-                }
-                if name.local_name == "item" {
-                    in_item = false;
-                }
-                if name.local_name == "title" {
-                    in_title = false;
-                }
-                if name.local_name == "artist" {
-                    in_artist = false;
-                }
-                if name.local_name == "album" {
-                    in_album = false;
-                }
-                if name.local_name == "albumArtURI" {
-                    in_album_art = false;
-                }
-                if name.local_name == "genre" {
-                    in_genre = false;
-                }
-                if name.local_name == "class" {
-                    in_class = false;
-                }
-                if name.local_name == "res" {
-                    in_res = false;
-                }
-            }
+                _ => {}
+            },
+            Ok(XmlEvent::EndElement { name }) => match name.local_name.as_str() {
+                "container" => in_container = false,
+                "item" => in_item = false,
+                "title" => in_title = false,
+                "artist" => in_artist = false,
+                "album" => in_album = false,
+                "albumArtURI" => in_album_art = false,
+                "genre" => in_genre = false,
+                "class" => in_class = false,
+                "res" => in_res = false,
+                _ => {}
+            },
             Ok(XmlEvent::Characters(value)) => {
                 if in_container {
                     if let Some(container) = containers.last_mut() {
@@ -694,7 +678,7 @@ pub fn deserialize_content_directory(xml: &str, ip: &str) -> Result<(Vec<Contain
                             item.genre = Some(value.clone());
                         }
                         if in_class {
-                            item.object_class = Some(value.clone().as_str().into());
+                            item.object_class = Some(value.as_str().into());
                         }
                         if in_res
                             && item.url.is_empty()
@@ -722,28 +706,30 @@ pub fn parse_transport_info(xml: &str) -> Result<TransportInfo> {
 
     for e in parser {
         match e {
-            Ok(XmlEvent::StartElement { name, .. }) => {
-                if name.local_name == "CurrentTransportState" {
+            Ok(XmlEvent::StartElement { name, .. }) => match name.local_name.as_str() {
+                "CurrentTransportState" => {
                     in_transport_state = true;
                 }
-                if name.local_name == "CurrentTransportStatus" {
+                "CurrentTransportStatus" => {
                     in_transport_status = true;
                 }
-                if name.local_name == "CurrentSpeed" {
+                "CurrentSpeed" => {
                     in_transport_play_speed = true;
                 }
-            }
-            Ok(XmlEvent::EndElement { name }) => {
-                if name.local_name == "CurrentTransportState" {
+                _ => {}
+            },
+            Ok(XmlEvent::EndElement { name }) => match name.local_name.as_str() {
+                "CurrentTransportState" => {
                     in_transport_state = false;
                 }
-                if name.local_name == "CurrentTransportStatus" {
+                "CurrentTransportStatus" => {
                     in_transport_status = false;
                 }
-                if name.local_name == "CurrentSpeed" {
+                "CurrentSpeed" => {
                     in_transport_play_speed = false;
                 }
-            }
+                _ => {}
+            },
             Ok(XmlEvent::Characters(value)) => {
                 if in_transport_state {
                     transport_info.current_transport_state = value.clone();
