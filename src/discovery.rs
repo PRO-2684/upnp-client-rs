@@ -36,8 +36,7 @@ pub async fn discover_pnp_locations() -> Result<impl Stream<Item = Device>> {
                 let mut buf = [0; 2048];
                 let (size, _) = socket.recv_from(&mut buf).await?;
                 // Convert the response to a string
-                let response =
-                    str::from_utf8(unsafe { std::slice::from_raw_parts(buf.as_ptr() as *const u8, size) })?;
+                let response = str::from_utf8(&buf[..size])?;
                 let headers = parse_raw_http_response(response)?;
                 let location = headers.get("location")
                     .ok_or_else(|| anyhow!("Response header missing location"))?
