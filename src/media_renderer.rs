@@ -30,7 +30,7 @@ pub struct MediaRendererClient {
 }
 
 impl MediaRendererClient {
-    pub fn new(device_client: DeviceClient) -> Self {
+    #[must_use] pub const fn new(device_client: DeviceClient) -> Self {
         Self { device_client }
     }
     pub async fn load(&self, url: &str, options: LoadOptions) -> Result<(), Error> {
@@ -284,5 +284,5 @@ fn format_time(seconds: u64) -> String {
     let hours = seconds / 3600;
     let minutes = (seconds % 3600) / 60;
     let seconds = seconds % 60;
-    format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
+    format!("{hours:02}:{minutes:02}:{seconds:02}")
 }

@@ -51,22 +51,23 @@ pub enum ObjectClass {
 impl From<&str> for ObjectClass {
     fn from(value: &str) -> Self {
         match value {
-            "object.item.audioItem.musicTrack" => ObjectClass::Audio,
-            "object.item.videoItem.movie" => ObjectClass::Video,
-            "object.item.imageItem.photo" => ObjectClass::Image,
-            "object.container" => ObjectClass::Container,
-            _ => ObjectClass::Container,
+            "object.item.audioItem.musicTrack" => Self::Audio,
+            "object.item.videoItem.movie" => Self::Video,
+            "object.item.imageItem.photo" => Self::Image,
+            // "object.container" => Self::Container,
+            _ => Self::Container,
         }
     }
 }
 
 impl ObjectClass {
-    pub fn value(&self) -> &'static str {
+    #[must_use]
+    pub const fn value(&self) -> &'static str {
         match self {
-            ObjectClass::Audio => "object.item.audioItem.musicTrack",
-            ObjectClass::Video => "object.item.videoItem.movie",
-            ObjectClass::Image => "object.item.imageItem.photo",
-            ObjectClass::Container => "object.container",
+            Self::Audio => "object.item.audioItem.musicTrack",
+            Self::Video => "object.item.videoItem.movie",
+            Self::Image => "object.item.imageItem.photo",
+            Self::Container => "object.container",
         }
     }
 }
@@ -121,6 +122,50 @@ pub enum AVTransportEvent {
     },
 }
 
+impl Display for AVTransportEvent {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::AVTransportURIMetaData {
+                sid,
+                url,
+                title,
+                artist,
+                album,
+                album_art_uri,
+                genre,
+            } => write!(
+                f,
+                "AVTransportEvent::AVTransportURIMetaData {{\n sid: {},\n url: {},\n title: {},\n artist: {:?},\n album: {:?},\n album_art_uri: {:?},\n genre: {:?}\n }}",
+                sid.bright_green(), url.bright_green(), title.bright_green(), artist.bright_green(), album.bright_green(), album_art_uri.bright_green(), genre.bright_green()
+            ),
+            Self::CurrentPlayMode { sid, play_mode } => {
+                write!(f, "AVTransportEvent::CurrentPlayMode {{\n sid: {}, play_mode: {}\n }}", sid.bright_green(), play_mode.bright_green())
+            }
+            Self::CurrentTrackMetadata {
+                sid,
+                url,
+                title,
+                artist,
+                album,
+                album_art_uri,
+                genre,
+            } => write!(
+                f,
+                "AVTransportEvent::CurrentTrackMetadata {{\n sid: {},\n url: {},\n title: {},\n artist: {:?},\n album: {:?},\n album_art_uri: {:?},\n genre: {:?}\n }}",
+                sid.bright_green(), url.bright_green(), title.bright_green(), artist.bright_green(), album.bright_green(), album_art_uri.bright_green(), genre.bright_green()
+            ),
+            Self::TransportState {
+                sid,
+                transport_state,
+            } => write!(
+                f,
+                "AVTransportEvent::TransportState {{\n sid: {},\n transport_state: {}\n }}",
+                sid.bright_green(), transport_state.bright_green()
+            ),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum Event {
     AVTransport(AVTransportEvent),
@@ -129,45 +174,9 @@ pub enum Event {
 impl Display for Event {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Event::AVTransport(event) => match event {
-                AVTransportEvent::AVTransportURIMetaData {
-                    sid,
-                    url,
-                    title,
-                    artist,
-                    album,
-                    album_art_uri,
-                    genre,
-                } => write!(
-                    f,
-                    "AVTransportEvent::AVTransportURIMetaData {{\n sid: {},\n url: {},\n title: {},\n artist: {:?},\n album: {:?},\n album_art_uri: {:?},\n genre: {:?}\n }}",
-                    sid.bright_green(), url.bright_green(), title.bright_green(), artist.bright_green(), album.bright_green(), album_art_uri.bright_green(), genre.bright_green()
-                ),
-                AVTransportEvent::CurrentPlayMode { sid, play_mode } => {
-                    write!(f, "AVTransportEvent::CurrentPlayMode {{\n sid: {}, play_mode: {}\n }}", sid.bright_green(), play_mode.bright_green())
-                }
-                AVTransportEvent::CurrentTrackMetadata {
-                    sid,
-                    url,
-                    title,
-                    artist,
-                    album,
-                    album_art_uri,
-                    genre,
-                } => write!(
-                    f,
-                    "AVTransportEvent::CurrentTrackMetadata {{\n sid: {},\n url: {},\n title: {},\n artist: {:?},\n album: {:?},\n album_art_uri: {:?},\n genre: {:?}\n }}",
-                    sid.bright_green(), url.bright_green(), title.bright_green(), artist.bright_green(), album.bright_green(), album_art_uri.bright_green(), genre.bright_green()
-                ),
-                AVTransportEvent::TransportState {
-                    sid,
-                    transport_state,
-                } => write!(
-                    f,
-                    "AVTransportEvent::TransportState {{\n sid: {},\n transport_state: {}\n }}",
-                    sid.bright_green(), transport_state.bright_green()
-                ),
-            },
+            Self::AVTransport(event) => {
+                write!(f, "{event}")
+            }
         }
     }
 }

@@ -48,7 +48,7 @@ impl DeviceClient {
         })
     }
 
-    pub fn ip(&self) -> String {
+    #[must_use] pub fn ip(&self) -> String {
         self.base_url.host_str().unwrap().to_string()
     }
 
@@ -96,7 +96,7 @@ impl DeviceClient {
         );
 
         let mut body = XMLElement::new("s:Body");
-        let action = format!("u:{}", action_name);
+        let action = format!("u:{action_name}");
         let mut action = XMLElement::new(action.as_str());
         action.add_attribute("xmlns:u", service.service_type.as_str());
 
@@ -162,7 +162,7 @@ impl DeviceClient {
         );
 
         let (address, port) = self.ensure_eventing_server().await?;
-        let callback = format!("<http://{}:{}>", address, port);
+        let callback = format!("<http://{address}:{port}>");
 
         let client = hyper::Client::new();
         let req = hyper::Request::builder()
@@ -285,6 +285,7 @@ impl DeviceClient {
 
         let stop = self.stop.clone();
 
+        // FIXME: ?
         tokio::spawn(async move {
             server.await.unwrap();
         });
@@ -306,8 +307,5 @@ impl DeviceClient {
 }
 
 fn resolve_service(service_id: &str) -> String {
-    match service_id.contains(':') {
-        true => service_id.to_string(),
-        false => format!("urn:upnp-org:serviceId:{}", service_id),
-    }
+    if service_id.contains(':') { service_id.to_string() } else { format!("urn:upnp-org:serviceId:{service_id}") }
 }

@@ -1,3 +1,6 @@
+#![warn(clippy::all, clippy::nursery, clippy::pedantic, clippy::cargo)]
+#![allow(clippy::missing_errors_doc)]
+
 pub mod device_client;
 pub mod discovery;
 pub mod media_renderer;

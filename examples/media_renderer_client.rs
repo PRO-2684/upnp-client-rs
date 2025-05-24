@@ -38,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }),
         autoplay: true,
         object_class: Some(ObjectClass::Video),
-        ..Default::default()
+        // ..Default::default()
     };
 
     let media_url =
@@ -52,9 +52,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("\n{}\n", event);
     }
 
-    // media_renderer.stop().await?;
-    // media_renderer.play().await?;
-    // media_renderer.pause().await?;
+    media_renderer.stop().await?;
+    media_renderer.play().await?;
+    media_renderer.pause().await?;
 
     Ok(())
 }

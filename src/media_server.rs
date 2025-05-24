@@ -13,7 +13,7 @@ pub struct MediaServerClient {
 }
 
 impl MediaServerClient {
-    pub fn new(device_client: DeviceClient) -> Self {
+    #[must_use] pub const fn new(device_client: DeviceClient) -> Self {
         Self { device_client }
     }
 
@@ -28,7 +28,7 @@ impl MediaServerClient {
         params.insert("Filter".to_string(), "*".to_string());
         params.insert("StartingIndex".to_string(), "0".to_string());
         params.insert("RequestedCount".to_string(), "0".to_string());
-        params.insert("SortCriteria".to_string(), "".to_string());
+        params.insert("SortCriteria".to_string(), String::new());
 
         let response = self
             .device_client

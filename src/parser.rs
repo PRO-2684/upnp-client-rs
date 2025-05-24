@@ -92,12 +92,12 @@ fn parse_attribute(xml_root: &str, xml_name: &str) -> Result<String> {
             );
             match element {
                 Some(element) => {
-                    return Ok(element.text().to_string());
+                    Ok(element.text().to_string())
                 }
-                None => Ok("".to_string()),
+                None => Ok(String::new()),
             }
         }
-        None => Ok("".to_string()),
+        None => Ok(String::new()),
     }
 }
 
@@ -176,10 +176,7 @@ pub async fn parse_service_description(scpd_url: &str) -> Result<Vec<Action>> {
         .map_err(|e| anyhow!("Failed to retrieve xml response from device: {}", e))?;
     let root = Element::from_reader(xml_root.as_bytes())?;
 
-    let action_list = match root.find("{urn:schemas-upnp-org:service-1-0}actionList") {
-        Some(action_list) => action_list,
-        None => return Ok(vec![]),
-    };
+    let Some(action_list) = root.find("{urn:schemas-upnp-org:service-1-0}actionList") else { return Ok(vec![]) };
 
     let mut actions = Vec::new();
     for xml_action in action_list.children() {
@@ -309,16 +306,16 @@ pub fn parse_position(xml_root: &str) -> Result<u32> {
 
     let position = position.ok_or_else(|| anyhow!("Invalid response from device"))?;
     position_iter = position.split(":");
-    let hours = position_iter.next().unwrap_or("0").parse::<u32>()?;
-    let minutes = position_iter.next().unwrap_or("0").parse::<u32>()?;
-    let seconds = position_iter.next().unwrap_or("0").parse::<u32>()?;
+    let hours = position_iter.next().map_or(Ok(0), str::parse)?;
+    let minutes = position_iter.next().map_or(Ok(0), str::parse)?;
+    let seconds = position_iter.next().map_or(Ok(0), str::parse)?;
     Ok(hours * 3600 + minutes * 60 + seconds)
 }
 
 pub fn parse_supported_protocols(xml_root: &str) -> Result<Vec<String>> {
     let parser = EventReader::from_str(xml_root);
     let mut in_protocol = false;
-    let mut protocols: String = "".to_string();
+    let mut protocols = String::new();
     for e in parser {
         match e {
             Ok(XmlEvent::StartElement { name, .. }) => {
@@ -339,7 +336,7 @@ pub fn parse_supported_protocols(xml_root: &str) -> Result<Vec<String>> {
             _ => {}
         }
     }
-    Ok(protocols.split(',').map(|s| s.to_string()).collect())
+    Ok(protocols.split(',').map(std::string::ToString::to_string).collect())
 }
 
 pub fn parse_last_change(xml_root: &str) -> Result<Option<String>> {
@@ -459,7 +456,7 @@ pub fn deserialize_metadata(xml: &str) -> Result<Metadata> {
     let mut artist: Option<String> = None;
     let mut album: Option<String> = None;
     let mut album_art: Option<String> = None;
-    let mut url: String = String::from("");
+    let mut url: String = String::new();
 
     for e in parser {
         match e {
@@ -653,7 +650,7 @@ pub fn deserialize_content_directory(xml: &str, ip: &str) -> Result<(Vec<Contain
                 if in_container {
                     if let Some(container) = containers.last_mut() {
                         if in_title {
-                            container.title = value.clone();
+                            container.title.clone_from(&value);
                         }
                         if in_class {
                             container.object_class = Some(value.as_str().into());
@@ -663,7 +660,7 @@ pub fn deserialize_content_directory(xml: &str, ip: &str) -> Result<(Vec<Contain
                 if in_item {
                     if let Some(item) = items.last_mut() {
                         if in_title {
-                            item.title = value.clone();
+                            item.title.clone_from(&value);
                         }
                         if in_artist {
                             item.artist = Some(value.clone());
@@ -732,13 +729,13 @@ pub fn parse_transport_info(xml: &str) -> Result<TransportInfo> {
             },
             Ok(XmlEvent::Characters(value)) => {
                 if in_transport_state {
-                    transport_info.current_transport_state = value.clone();
+                    transport_info.current_transport_state.clone_from(&value);
                 }
                 if in_transport_status {
-                    transport_info.current_transport_status = value.clone();
+                    transport_info.current_transport_status.clone_from(&value);
                 }
                 if in_transport_play_speed {
-                    transport_info.current_speed = value.clone();
+                    transport_info.current_speed.clone_from(&value);
                 }
             }
             _ => {}
@@ -753,7 +750,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_parsing_device_without_service_list() {
-        const XML_ROOT: &'static str = r#"<?xml version="1.0" encoding="UTF-8"?>
+        const XML_ROOT: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
         <root xmlns="urn:schemas-upnp-org:device-1-0">
             <specVersion>
                 <major>1</major>
