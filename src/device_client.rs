@@ -48,7 +48,8 @@ impl DeviceClient {
         })
     }
 
-    #[must_use] pub fn ip(&self) -> String {
+    #[must_use]
+    pub fn ip(&self) -> String {
         self.base_url.host_str().unwrap().to_string()
     }
 
@@ -307,5 +308,9 @@ impl DeviceClient {
 }
 
 fn resolve_service(service_id: &str) -> String {
-    if service_id.contains(':') { service_id.to_string() } else { format!("urn:upnp-org:serviceId:{service_id}") }
+    if service_id.contains(':') {
+        service_id.to_string()
+    } else {
+        format!("urn:upnp-org:serviceId:{service_id}")
+    }
 }

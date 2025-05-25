@@ -1,4 +1,3 @@
-use std::str::Split;
 use std::time::Duration;
 
 use crate::types::{Action, Argument, Container, Device, Item, Metadata, Service, TransportInfo};
@@ -91,9 +90,7 @@ fn parse_attribute(xml_root: &str, xml_name: &str) -> Result<String> {
                     .ok_or_else(|| anyhow!("xml_name ended unexpectedly"))?,
             );
             match element {
-                Some(element) => {
-                    Ok(element.text().to_string())
-                }
+                Some(element) => Ok(element.text().to_string()),
                 None => Ok(String::new()),
             }
         }
@@ -176,7 +173,9 @@ pub async fn parse_service_description(scpd_url: &str) -> Result<Vec<Action>> {
         .map_err(|e| anyhow!("Failed to retrieve xml response from device: {}", e))?;
     let root = Element::from_reader(xml_root.as_bytes())?;
 
-    let Some(action_list) = root.find("{urn:schemas-upnp-org:service-1-0}actionList") else { return Ok(vec![]) };
+    let Some(action_list) = root.find("{urn:schemas-upnp-org:service-1-0}actionList") else {
+        return Ok(vec![]);
+    };
 
     let mut actions = Vec::new();
     for xml_action in action_list.children() {
@@ -281,8 +280,7 @@ pub fn parse_duration(xml_root: &str) -> Result<u32> {
 pub fn parse_position(xml_root: &str) -> Result<u32> {
     let parser = EventReader::from_str(xml_root);
     let mut in_position = false;
-    let mut position_iter: Split<'_, &str>;
-    let mut position: Option<String> = None;
+    let mut position = None;
     for e in parser {
         match e {
             Ok(XmlEvent::StartElement { name, .. }) => {
@@ -305,7 +303,7 @@ pub fn parse_position(xml_root: &str) -> Result<u32> {
     }
 
     let position = position.ok_or_else(|| anyhow!("Invalid response from device"))?;
-    position_iter = position.split(":");
+    let mut position_iter = position.split(':');
     let hours = position_iter.next().map_or(Ok(0), str::parse)?;
     let minutes = position_iter.next().map_or(Ok(0), str::parse)?;
     let seconds = position_iter.next().map_or(Ok(0), str::parse)?;
@@ -336,7 +334,10 @@ pub fn parse_supported_protocols(xml_root: &str) -> Result<Vec<String>> {
             _ => {}
         }
     }
-    Ok(protocols.split(',').map(std::string::ToString::to_string).collect())
+    Ok(protocols
+        .split(',')
+        .map(std::string::ToString::to_string)
+        .collect())
 }
 
 pub fn parse_last_change(xml_root: &str) -> Result<Option<String>> {

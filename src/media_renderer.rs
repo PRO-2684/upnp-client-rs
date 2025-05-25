@@ -30,7 +30,8 @@ pub struct MediaRendererClient {
 }
 
 impl MediaRendererClient {
-    #[must_use] pub const fn new(device_client: DeviceClient) -> Self {
+    #[must_use]
+    pub const fn new(device_client: DeviceClient) -> Self {
         Self { device_client }
     }
     pub async fn load(&self, url: &str, options: LoadOptions) -> Result<(), Error> {
